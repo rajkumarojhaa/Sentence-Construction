@@ -5,6 +5,14 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertCircle, Clock, ListOrdered } from "lucide-react";
 import { testData } from "@/lib/data";
 import { motion, AnimatePresence } from "framer-motion";
+import {  
+  Dialog,  
+  DialogContent,  
+  DialogHeader,  
+  DialogTitle,  
+  DialogDescription,  
+  DialogFooter,  
+} from "@/components/ui/dialog";  
 
 export default function SentenceConstruction() {
   const [startTest, setStartTest] = useState(false);
@@ -18,6 +26,7 @@ export default function SentenceConstruction() {
 
   const questions = testData.data.questions;
   const currentQuestion = questions[currentQuestionIndex];
+  const [isQuitDialogOpen, setIsQuitDialogOpen] = useState(false);
 
   // Function to handle the start of the test
   useEffect(() => {
@@ -105,17 +114,24 @@ export default function SentenceConstruction() {
 
   // Function to handle the quit button click
   // It saves the remaining questions as skipped in the userAnswers state
-  const handleQuit = () => {
-    const remainingQuestions = questions.slice(currentQuestionIndex);
-    const remainingAnswers = remainingQuestions.map((q) => ({
-      questionId: q.questionId,
-      userAnswer: [],
-      isCorrect: false,
-      skipped: true,
-    }));
-    setUserAnswers((prev) => [...prev, ...remainingAnswers]);
-    setIsGameOver(true);
-  };
+   // New function to handle quit confirmation  
+   const confirmQuit = () => {  
+    setIsQuitDialogOpen(true);  
+  };  
+
+  // New function to handle actual quit action  
+  const handleQuitConfirmed = () => {  
+    const remainingQuestions = questions.slice(currentQuestionIndex);  
+    const remainingAnswers = remainingQuestions.map((q) => ({  
+      questionId: q.questionId,  
+      userAnswer: [],  
+      isCorrect: false,  
+      skipped: true,  
+    }));  
+    setUserAnswers((prev) => [...prev, ...remainingAnswers]);  
+    setIsGameOver(true);  
+    setIsQuitDialogOpen(false);  
+  }; 
 
   // Function to render the question with the selected answers highlighted
   const renderSentence = () => {
@@ -263,14 +279,15 @@ export default function SentenceConstruction() {
   }
 
   return (
+    <>
     <Card className="w-full max-w-4xl mx-2 shadow-lg rounded-lg">
       <CardContent className="p-6 relative">
-        <button
-          className="absolute top-0 right-6 text-red-600 hover:text-red-800 font-semibold underline text-sm"
-          onClick={handleQuit}
-        >
-          Quit
-        </button>
+      <button  
+            className="absolute top-0 right-6 text-red-600 hover:text-red-800 font-semibold underline text-sm"  
+            onClick={confirmQuit}  
+          >  
+            Quit  
+          </button> 
 
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
@@ -328,5 +345,32 @@ export default function SentenceConstruction() {
         </div>
       </CardContent>
     </Card>
+     {/* Quit Confirmation Dialog */}  
+     <Dialog open={isQuitDialogOpen} onOpenChange={setIsQuitDialogOpen}>  
+        <DialogContent>  
+          <DialogHeader>  
+            <DialogTitle>Confirm Quit</DialogTitle>  
+            <DialogDescription>  
+              Are you sure you want to quit the test?   
+              All remaining questions will be marked as skipped.  
+            </DialogDescription>  
+          </DialogHeader>  
+          <DialogFooter>  
+            <Button   
+              variant="outline"   
+              onClick={() => setIsQuitDialogOpen(false)}  
+            >  
+              Cancel  
+            </Button>  
+            <Button   
+              variant="destructive"   
+              onClick={handleQuitConfirmed}  
+            >  
+              Quit Test  
+            </Button>  
+          </DialogFooter>  
+        </DialogContent>  
+      </Dialog> 
+    </>
   );
 }
